@@ -6,7 +6,7 @@ from datetime import timedelta
 from account.decorators import login_required_custom
 from account.models import User
 from catalog.models import Product
-from receipt.models import Receipt, ReceiptItem
+from receipt.models import Receipt, ReceiptItem, Supply
 import json
 
 
@@ -44,6 +44,8 @@ def dashboard(request):
         status='confirmed',
         created_at__year=now.year
     ).aggregate(total=Sum('total'))['total'] or 0
+    
+    potential_stock_revenue = sum((p.final_price * p.stock) for p in Product.objects.filter(is_active=True, stock__gt=0)) 
 
     # Monthly chart
     monthly = (
@@ -77,6 +79,7 @@ def dashboard(request):
         'monthly_data': json.dumps(monthly_data),
         'month_revenue': month_revenue,
         'year_revenue': year_revenue,
+        'potential_stock_revenue': potential_stock_revenue,
         'top_sold': top_sold,
         'least_sold': least_sold,
         'low_stock_products': low_stock_products,

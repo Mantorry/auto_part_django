@@ -16,13 +16,13 @@
             <div class="d-flex gap-3">
               <label class="d-flex align-items-center gap-2 cursor-pointer" style="cursor:pointer">
                 <input type="radio" name="theme" value="light" {% if user.theme == 'light' %}checked{% endif %} class="form-check-input mt-0">
-                <span class="badge" style="background:#e8e8e4;color:#1a1423;border:1px solid #dee2e6;font-size:0.85rem;padding:8px 14px">
+                <span class="badge theme-badge-light" style="background:background:#e8e8e4;color:#1a1423;border:1px solid #dee2e6;font-size:0.85rem;padding:8px 14px">
                   ☀️ Светлая
                 </span>
               </label>
               <label class="d-flex align-items-center gap-2 cursor-pointer" style="cursor:pointer">
                 <input type="radio" name="theme" value="dark" {% if user.theme == 'dark' %}checked{% endif %} class="form-check-input mt-0">
-                <span class="badge" style="background:#0f1b2d;color:#ffffff;border:1px solid #2a4060;font-size:0.85rem;padding:8px 14px">
+                <span class="badge theme-badge-dark" style="background:#0f1b2d;color:#ffffff;border:1px solid #2a4060;font-size:0.85rem;padding:8px 14px">
                   🌙 Тёмная
                 </span>
               </label>

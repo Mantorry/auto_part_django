@@ -11,7 +11,7 @@
 {% if items %}
 <div class="row g-4">
   <div class="col-lg-8">
-    <div class="card">
+    <div class="card border-0">
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
           <thead>
@@ -41,7 +41,7 @@
                   </div>
                 </div>
               </td>
-              <td class="text-center align-middle fw-semibold" style="color:var(--accent)">{{ item.price }} ₽</td>
+              <td class="text-center align-middle fw-semibold" style="color:var(--accent)">{{ item.product.final_price|floatformat:0 }} ₽</td>
               <td class="text-center align-middle">
                 <form method="post" action="{% url 'catalog:cart_update' item.product.pk %}" class="d-inline-flex align-items-center gap-1">
                   {% csrf_token %}
@@ -67,7 +67,7 @@
     </div>
   </div>
   <div class="col-lg-4">
-    <div class="card">
+    <div class="card border-0">
       <div class="card-header py-3 fw-bold">Итого</div>
       <div class="card-body p-4">
         {% for item in items %}

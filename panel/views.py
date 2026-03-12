@@ -5,6 +5,9 @@ from account.models import User
 from catalog.models import Category, Subcategory, Product
 from receipt.models import Receipt, Supply
 from django.contrib.auth.hashers import make_password
+from decimal import Decimal, InvalidOperation
+from django.db import transaction
+from django.db.models import F
 
 
 def admin_required(view_func):
@@ -265,7 +268,32 @@ def receipt_delete(request, pk):
 def supply_list(request):
     supplies = Supply.objects.all()
     return render(request, 'panel/supply_list.html', {'supplies': supplies})
+  
+@login_required_custom
+@admin_required
+def supply_detail(request, pk):
+    supply = get_object_or_404(Supply.objects.prefetch_related('items__product'), pk=pk)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        allowed_statuses = {choice[0] for choice in Supply.STATUS_CHOICES}
 
+        if new_status in allowed_statuses and new_status != supply.status:
+            with transaction.atomic():
+                old_status = supply.status
+                supply.status = new_status
+                supply.save(update_fields=['status'])
+
+                if old_status != 'received' and new_status == 'received' and not supply.received_at:
+                    from django.utils import timezone
+                    for item in supply.items.all():
+                        if item.product_id:
+                            Product.objects.filter(id=item.product_id).update(stock=F('stock') + item.quantity)
+                    supply.received_at = timezone.now()
+                    supply.save(update_fields=['received_at'])
+                messages.success(request, 'Статус поставки обновлён')
+
+        return redirect('panel:supply_detail', pk=supply.pk)
+    return render(request, 'panel/supply_detail.html', {'supply': supply, 'status_choices': Supply.STATUS_CHOICES})
 
 @login_required_custom
 @admin_required
@@ -287,12 +315,19 @@ def supply_create(request):
         for pid, qty, price in zip(pids, qtys, prices):
             if pid and qty and price:
                 p = Product.objects.get(id=pid)
+                try:
+                    quantity = int(qty)
+                    cost_price = Decimal(price)
+                except (TypeError, ValueError, InvalidOperation):
+                  continue
+                if quantity <= 0 or cost_price <= 0:
+                  continue
                 item = SupplyItem.objects.create(
                     supply=supply,
                     product=p,
                     product_name=p.name,
-                    cost_price=price,
-                    quantity=qty,
+                    cost_price=cost_price,
+                    quantity=quantity,
                 )
                 total += item.subtotal
         supply.total = total

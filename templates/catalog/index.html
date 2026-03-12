@@ -82,6 +82,26 @@
     font-size: 0.77rem;
     font-weight: 500;
   }
+	.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 900px) {
+    .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1180px) {
+    .catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1460px) {
+    .catalog-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1760px) {
+    .catalog-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  }
 </style>
 {% endblock %}
 
@@ -209,10 +229,9 @@
 
     <!-- Products Grid -->
     {% if products %}
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
+    <div class="catalog-grid">
       {% for product in products %}
-      <div class="col">
-        <div class="card product-card h-100">
+      <div class="card product-card h-100">
           {% if product.image %}
           <img src="{{ product.image.url }}" alt="{{ product.name }}">
           {% else %}
@@ -229,7 +248,7 @@
               <span class="badge bg-danger ms-1" style="font-size:0.7rem">Мало</span>
               {% endif %}
             </div>
-            <h6 class="mb-1 fw-semibold" style="font-size:0.88rem">{{ product.name }}</h6>
+            <h6 class="mb-1 fw-bold" style="font-size:0.88rem">{{ product.name }}</h6>
             <p class="text-muted mb-2 flex-grow-1" style="font-size:0.77rem;line-height:1.4">{{ product.description|truncatechars:65 }}</p>
             <div class="d-flex justify-content-between align-items-center mb-2">
               <div>
@@ -261,7 +280,6 @@
             </div>
           </div>
         </div>
-      </div>
       {% endfor %}
     </div>
     {% else %}

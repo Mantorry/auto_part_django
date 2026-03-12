@@ -30,6 +30,7 @@ urlpatterns = [
     path('receipts/<int:pk>/delete/', views.receipt_delete, name='receipt_delete'),
     # Supplies
     path('supplies/', views.supply_list, name='supply_list'),
+    path('supplies/<int:pk>/', views.supply_detail, name="supply_detail"),
     path('supplies/create/', views.supply_create, name='supply_create'),
     path('supplies/<int:pk>/delete/', views.supply_delete, name='supply_delete'),
 ]

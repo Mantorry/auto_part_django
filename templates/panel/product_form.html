@@ -73,17 +73,28 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-function loadSubs(catId) {
+function loadSubs(catId, keepSelected = false) {
   const subSelect = document.getElementById('subSelect');
+	const selectedBeforeFilter = subSelect.value;
   const options = subSelect.querySelectorAll('option[data-cat]');
+
   options.forEach(opt => {
     opt.style.display = (!catId || opt.dataset.cat === catId) ? '' : 'none';
   });
+
+	if (keepSelected && selectedBeforeFilter) {
+		const currentOption = subSelect.querySelector(`option[value="${selectedBeforeFilter}"]`);
+		if (currentOption && (!catId || currentOption.dataset.cat == catId)) {
+			subSelect.value = selectedBeforeFilter;
+			return;
+		}
+	}
   subSelect.value = '';
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   const cat = document.getElementById('catSelect').value;
-  if (cat) loadSubs(cat);
+  loadSub(cat, true);
 });
 </script>
 {% endblock %}

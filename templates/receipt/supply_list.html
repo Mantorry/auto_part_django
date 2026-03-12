@@ -12,7 +12,7 @@
   </li>
   <li class="nav-item">
     <a class="nav-link active fw-semibold" href="{% url 'receipt:supply_list' %}"
-      style="color:var(--accent);border-color:var(--border) var(--border) var(--bg-main)">
+      style="color:var(--text-main);border-color:var(--border) var(--border);background:var(--bg-nav);">
       <i class="bi bi-truck me-1"></i>Поступления
     </a>
   </li>
@@ -28,7 +28,7 @@
     </div>
   </div>
 </div>
-<div class="card">
+<div class="card border-0">
   <div class="card-body p-0">
     {% if supplies %}
     <table class="table table-hover mb-0">
