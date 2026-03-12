@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Подкатегории{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-diagram-3 me-2" style="color:var(--accent)"></i>Подкатегории</h2>
+  <a href="{% url 'panel:subcategory_create' %}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th class="ps-4">Название</th><th>Категория</th><th>Slug</th><th>Товаров</th><th></th></tr></thead>
+      <tbody>
+        {% for s in subcategories %}
+        <tr>
+          <td class="ps-4 fw-semibold">{{ s.name }}</td>
+          <td><span class="badge" style="background:var(--sidebar-active-bg);color:var(--accent)">{{ s.category.name }}</span></td>
+          <td class="text-muted small">{{ s.slug }}</td>
+          <td>{{ s.products.count }}</td>
+          <td class="text-end pe-3">
+            <a href="{% url 'panel:subcategory_edit' s.pk %}" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'panel:subcategory_delete' s.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">Нет подкатегорий</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

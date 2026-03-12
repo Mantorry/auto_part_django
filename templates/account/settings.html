@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Настройки{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-sliders me-2" style="color:var(--accent)"></i>Настройки</h2>
+</div>
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header py-3">Персональные настройки</div>
+      <div class="card-body p-4">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Цветовая тема</label>
+            <div class="d-flex gap-3">
+              <label class="d-flex align-items-center gap-2 cursor-pointer" style="cursor:pointer">
+                <input type="radio" name="theme" value="light" {% if user.theme == 'light' %}checked{% endif %} class="form-check-input mt-0">
+                <span class="badge" style="background:#e8e8e4;color:#1a1423;border:1px solid #dee2e6;font-size:0.85rem;padding:8px 14px">
+                  ☀️ Светлая
+                </span>
+              </label>
+              <label class="d-flex align-items-center gap-2 cursor-pointer" style="cursor:pointer">
+                <input type="radio" name="theme" value="dark" {% if user.theme == 'dark' %}checked{% endif %} class="form-check-input mt-0">
+                <span class="badge" style="background:#0f1b2d;color:#ffffff;border:1px solid #2a4060;font-size:0.85rem;padding:8px 14px">
+                  🌙 Тёмная
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="notifications_enabled" id="notif"
+                {% if user.notifications_enabled %}checked{% endif %} style="width:2.5em;height:1.3em">
+              <label class="form-check-label ms-2" for="notif">
+                <i class="bi bi-bell me-1"></i> Уведомления о низком остатке товаров
+              </label>
+            </div>
+            <div class="form-text mt-1">Уведомление появляется, если остаток товара меньше 3 штук</div>
+          </div>
+          <button type="submit" class="btn btn-accent px-4">
+            <i class="bi bi-check-lg me-1"></i>Сохранить
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header py-3">Информация об аккаунте</div>
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img src="/static/src/avatar.png" alt="avatar" style="width:56px;height:56px;border-radius:50%;border:2px solid var(--accent)">
+          <div>
+            <div class="fw-bold">{{ user.full_name }}</div>
+            <div class="text-muted small">{{ user.get_role_display }}</div>
+          </div>
+        </div>
+        <table class="table table-sm">
+          <tr><td class="text-muted">Логин</td><td>{{ user.username }}</td></tr>
+          <tr><td class="text-muted">Роль</td><td>{{ user.get_role_display }}</td></tr>
+          <tr><td class="text-muted">Зарегистрирован</td><td>{{ user.created_at|date:"d.m.Y" }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

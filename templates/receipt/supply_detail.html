@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Поставка {{ supply.number }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-truck me-2" style="color:var(--accent)"></i>{{ supply }}</h2>
+  <a href="{% url 'receipt:supply_list' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Назад
+  </a>
+</div>
+<div class="card">
+  <div class="card-body p-4">
+    <div class="row g-3 mb-4">
+      <div class="col-sm-3"><div class="small text-muted">Номер</div><div class="fw-bold">{{ supply.number }}</div></div>
+      <div class="col-sm-3"><div class="small text-muted">Поставщик</div><div class="fw-bold">{{ supply.supplier }}</div></div>
+      <div class="col-sm-3"><div class="small text-muted">Дата</div><div class="fw-bold">{{ supply.created_at|date:"d.m.Y" }}</div></div>
+      <div class="col-sm-3"><div class="small text-muted">Статус</div>
+        {% if supply.status == 'received' %}<span class="badge bg-success">Получено</span>
+        {% else %}<span class="badge bg-warning text-dark">Ожидается</span>{% endif %}
+      </div>
+    </div>
+    <table class="table receipt-table">
+      <thead>
+        <tr>
+          <th class="ps-3">№</th><th>Товар</th><th class="text-center">Кол-во</th>
+          <th class="text-center">Цена закупки</th><th class="text-center">Сумма</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in supply.items.all %}
+        <tr>
+          <td class="ps-3">{{ forloop.counter }}</td>
+          <td>{{ item.product_name }}</td>
+          <td class="text-center">{{ item.quantity }}</td>
+          <td class="text-center">{{ item.cost_price }} ₽</td>
+          <td class="text-center fw-semibold" style="color:var(--accent)">{{ item.subtotal }} ₽</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="text-end fw-bold">ИТОГО:</td>
+          <td class="text-center fw-bold" style="color:var(--accent)">{{ supply.total }} ₽</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endblock %}

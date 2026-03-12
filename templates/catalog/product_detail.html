@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'catalog:index' %}" class="text-decoration-none" style="color:var(--accent)">
+    <i class="bi bi-arrow-left me-1"></i>Назад к каталогу
+  </a>
+</div>
+<div class="card">
+  <div class="card-body p-4">
+    <div class="row g-4">
+      <div class="col-md-4">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded-3" style="max-height:320px;object-fit:cover;width:100%">
+        {% else %}
+        <div class="product-img-placeholder rounded-3" style="height:280px;font-size:4rem">
+          <i class="bi bi-car-front"></i>
+        </div>
+        {% endif %}
+      </div>
+      <div class="col-md-8">
+        <div class="d-flex gap-2 mb-2">
+          {% if product.category %}<span class="badge" style="background:var(--sidebar-active-bg);color:var(--accent)">{{ product.category.name }}</span>{% endif %}
+          {% if product.subcategory %}<span class="badge" style="background:var(--sidebar-active-bg);color:var(--accent)">{{ product.subcategory.name }}</span>{% endif %}
+          {% if product.discount > 0 %}<span class="badge bg-danger">-{{ product.discount|floatformat:0 }}%</span>{% endif %}
+        </div>
+        <h2 class="fw-bold mb-3">{{ product.name }}</h2>
+        <p style="color:var(--text-muted);line-height:1.7">{{ product.description }}</p>
+        <div class="row g-3 my-3">
+          <div class="col-6">
+            <div class="p-3 rounded-3" style="background:var(--sidebar-active-bg)">
+              <div class="small text-muted">Цена</div>
+              {% if product.discount > 0 %}
+              <div class="text-decoration-line-through text-muted">{{ product.price }} ₽</div>
+              <div class="fs-4 fw-bold" style="color:var(--accent)">{{ product.final_price|floatformat:0 }} ₽</div>
+              {% else %}
+              <div class="fs-4 fw-bold" style="color:var(--accent)">{{ product.price }} ₽</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 rounded-3" style="background:var(--sidebar-active-bg)">
+              <div class="small text-muted">Остаток</div>
+              <div class="fs-4 fw-bold {% if product.low_stock %}text-danger{% endif %}">{{ product.stock }} шт.</div>
+              {% if product.low_stock %}<div class="small text-danger">Заканчивается!</div>{% endif %}
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 rounded-3" style="background:var(--sidebar-active-bg)">
+              <div class="small text-muted">Продано</div>
+              <div class="fs-5 fw-semibold">{{ product.sold_count }} шт.</div>
+            </div>
+          </div>
+        </div>
+        {% if product.stock > 0 %}
+        <form method="post" action="{% url 'catalog:cart_add' product.pk %}" class="d-flex gap-2">
+          {% csrf_token %}
+          <input type="number" name="qty" value="1" min="1" max="{{ product.stock }}" class="form-control" style="width:90px">
+          <button type="submit" class="btn btn-accent px-4">
+            <i class="bi bi-cart-plus me-2"></i>В корзину
+          </button>
+        </form>
+        {% else %}
+        <button class="btn btn-secondary" disabled>Нет в наличии</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

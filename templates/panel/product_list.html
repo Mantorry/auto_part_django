@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Товары{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-box-seam me-2" style="color:var(--accent)"></i>Товары</h2>
+  <a href="{% url 'panel:product_create' %}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr>
+        <th class="ps-4">Товар</th><th>Категория</th><th class="text-end">Цена</th>
+        <th class="text-end">Скидка</th><th class="text-center">Остаток</th><th class="text-center">Активен</th><th></th>
+      </tr></thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td class="ps-4">
+            <div class="d-flex align-items-center gap-2">
+              {% if p.image %}<img src="{{ p.image.url }}" style="width:36px;height:36px;object-fit:cover;border-radius:6px">
+              {% else %}<div style="width:36px;height:36px;background:var(--sidebar-active-bg);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--accent)"><i class="bi bi-car-front" style="font-size:0.85rem"></i></div>{% endif %}
+              <span class="fw-semibold">{{ p.name }}</span>
+            </div>
+          </td>
+          <td>
+            {% if p.subcategory %}<span class="badge" style="background:var(--sidebar-active-bg);color:var(--accent)">{{ p.subcategory.name }}</span>
+            {% elif p.category %}<span class="badge" style="background:var(--sidebar-active-bg);color:var(--accent)">{{ p.category.name }}</span>{% endif %}
+          </td>
+          <td class="text-end fw-semibold" style="color:var(--accent)">{{ p.price }} ₽</td>
+          <td class="text-end">{% if p.discount > 0 %}<span class="badge bg-danger">-{{ p.discount }}%</span>{% else %}—{% endif %}</td>
+          <td class="text-center {% if p.low_stock %}text-danger fw-bold{% endif %}">{{ p.stock }}</td>
+          <td class="text-center">{% if p.is_active %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %}</td>
+          <td class="text-end pe-3">
+            <a href="{% url 'panel:product_edit' p.pk %}" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-pencil"></i></a>
+            <a href="{% url 'panel:product_delete' p.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-muted py-4">Нет товаров</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

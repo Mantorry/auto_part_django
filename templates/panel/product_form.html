@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-box-seam me-2" style="color:var(--accent)"></i>{{ title }}</h2>
+  <a href="{% url 'panel:product_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Назад</a>
+</div>
+<div class="card" style="max-width:640px">
+  <div class="card-body p-4">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label fw-semibold">Название <span class="text-danger">*</span></label>
+          <input type="text" name="name" class="form-control" value="{{ obj.name|default:'' }}" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Описание</label>
+          <textarea name="description" class="form-control" rows="3">{{ obj.description|default:'' }}</textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Категория</label>
+          <select name="category" class="form-select" id="catSelect" onchange="loadSubs(this.value)">
+            <option value="">— Не выбрана —</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {% if obj.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Подкатегория</label>
+          <select name="subcategory" class="form-select" id="subSelect">
+            <option value="">— Не выбрана —</option>
+            {% for c in categories %}{% for s in c.subcategories.all %}
+            <option value="{{ s.id }}" data-cat="{{ c.id }}" {% if obj.subcategory_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Цена (₽) <span class="text-danger">*</span></label>
+          <input type="number" name="price" class="form-control" step="0.01" value="{{ obj.price|default:'' }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Скидка (%)</label>
+          <input type="number" name="discount" class="form-control" step="0.01" min="0" max="100" value="{{ obj.discount|default:'0' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Остаток</label>
+          <input type="number" name="stock" class="form-control" min="0" value="{{ obj.stock|default:'0' }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Изображение</label>
+          {% if obj.image %}
+          <div class="mb-2"><img src="{{ obj.image.url }}" style="height:80px;border-radius:8px;object-fit:cover"></div>
+          {% endif %}
+          <input type="file" name="image" class="form-control" accept="image/*">
+        </div>
+        <div class="col-12">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="is_active" id="is_active"
+              {% if obj.is_active or not obj %}checked{% endif %}>
+            <label class="form-check-label" for="is_active">Активен (отображается в каталоге)</label>
+          </div>
+        </div>
+      </div>
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-accent px-4">Сохранить</button>
+        <a href="{% url 'panel:product_list' %}" class="btn btn-outline-secondary">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function loadSubs(catId) {
+  const subSelect = document.getElementById('subSelect');
+  const options = subSelect.querySelectorAll('option[data-cat]');
+  options.forEach(opt => {
+    opt.style.display = (!catId || opt.dataset.cat === catId) ? '' : 'none';
+  });
+  subSelect.value = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const cat = document.getElementById('catSelect').value;
+  if (cat) loadSubs(cat);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}Аналитика{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-bar-chart-line me-2" style="color:var(--accent)"></i>Аналитика</h2>
+</div>
+
+<!-- Low stock notifications -->
+{% if notifications_enabled and low_stock_products %}
+<div class="card mb-4" style="border-left:4px solid var(--accent)">
+  <div class="card-header py-2 d-flex align-items-center gap-2">
+    <i class="bi bi-bell-fill" style="color:var(--accent)"></i>
+    <span class="fw-semibold">Уведомления</span>
+    <span class="badge ms-1" style="background:var(--accent)">{{ low_stock_products|length }}</span>
+  </div>
+  <div class="card-body p-3">
+    {% for p in low_stock_products %}
+    <div class="notification-item">
+      <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+      Товар <a href="{% url 'catalog:product_detail' p.pk %}" style="color:var(--accent);font-weight:600">{{ p.name }}</a>
+      почти закончился — осталось <strong>{{ p.stock }} шт.</strong> Необходимо пополнить склад.
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex align-items-start justify-content-between mb-2">
+        <div class="stat-icon"><i class="bi bi-calendar-month"></i></div>
+      </div>
+      <div class="stat-value">{{ month_revenue|floatformat:0 }} ₽</div>
+      <div class="stat-label">Выручка за месяц</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="d-flex align-items-start justify-content-between mb-2">
+        <div class="stat-icon"><i class="bi bi-calendar-year"></i></div>
+      </div>
+      <div class="stat-value">{{ year_revenue|floatformat:0 }} ₽</div>
+      <div class="stat-label">Выручка за год</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Sales chart by day -->
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header py-3 fw-semibold">
+        <i class="bi bi-graph-up me-2" style="color:var(--accent)"></i>Продажи за последние 30 дней
+      </div>
+      <div class="card-body p-3">
+        <canvas id="salesChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+  <!-- Monthly chart -->
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header py-3 fw-semibold">
+        <i class="bi bi-bar-chart me-2" style="color:var(--accent)"></i>По месяцам
+      </div>
+      <div class="card-body p-3">
+        <canvas id="monthlyChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Top 5 sold -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header py-3 fw-semibold">
+        <i class="bi bi-trophy me-2 text-warning"></i>Топ 5 продаваемых
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th class="ps-4">Товар</th><th class="text-end pe-4">Продано</th></tr></thead>
+          <tbody>
+            {% for item in top_sold %}
+            <tr>
+              <td class="ps-4">{{ item.product_name }}</td>
+              <td class="text-end pe-4 fw-semibold" style="color:var(--accent)">{{ item.total_qty }} шт.</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-center text-muted py-3">Нет данных</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- Least sold -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header py-3 fw-semibold">
+        <i class="bi bi-arrow-down-circle me-2 text-danger"></i>Топ 5 непродаваемых
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th class="ps-4">Товар</th><th class="text-end pe-4">Продано</th></tr></thead>
+          <tbody>
+            {% for p in least_sold %}
+            <tr>
+              <td class="ps-4">
+                <a href="{% url 'catalog:product_detail' p.pk %}" style="color:var(--text-main);text-decoration:none">{{ p.name }}</a>
+              </td>
+              <td class="text-end pe-4 text-muted">{{ p.sold_count }} шт.</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-center text-muted py-3">Нет данных</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const isDark = document.documentElement.dataset.theme === 'dark';
+const accent = '#7161ef';
+const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+const textColor = isDark ? '#e8e8e4' : '#1a1423';
+Chart.defaults.color = textColor;
+
+const salesLabels = {{ sales_labels|safe }};
+const salesData = {{ sales_data|safe }};
+new Chart(document.getElementById('salesChart'), {
+  type: 'line',
+  data: {
+    labels: salesLabels,
+    datasets: [{
+      label: 'Выручка (₽)',
+      data: salesData,
+      borderColor: accent,
+      backgroundColor: 'rgba(113,97,239,0.12)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: accent,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gridColor } },
+      y: { grid: { color: gridColor }, beginAtZero: true }
+    }
+  }
+});
+
+const mLabels = {{ monthly_labels|safe }};
+const mData = {{ monthly_data|safe }};
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: mLabels,
+    datasets: [{
+      label: 'Выручка',
+      data: mData,
+      backgroundColor: 'rgba(113,97,239,0.7)',
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { grid: { color: gridColor }, beginAtZero: true }
+    }
+  }
+});
+</script>
+{% endblock %}

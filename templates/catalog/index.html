@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% block title %}Каталог товаров{% endblock %}
+{% block extra_head %}
+<style>
+  .filter-sidebar { width: 230px; flex-shrink: 0; }
+  .filter-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  .filter-card::-webkit-scrollbar { width: 4px; }
+  .filter-card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .filter-cat-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px 8px 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .filter-cat-header:hover { background: var(--sidebar-active-bg); }
+  .filter-cat-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    flex-grow: 1;
+    cursor: pointer;
+    margin: 0;
+  }
+  .filter-chevron {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .filter-chevron.open { transform: rotate(180deg); }
+
+  .filter-sub-list { padding: 2px 14px 8px 38px; display: none; }
+  .filter-sub-list.open { display: block; }
+
+  .fcheck {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    cursor: pointer;
+  }
+  .fcheck input[type="checkbox"] {
+    width: 14px; height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+  }
+  .fcheck label {
+    font-size: 0.81rem;
+    color: var(--text-main);
+    cursor: pointer;
+    margin: 0;
+    line-height: 1.35;
+  }
+  .fcheck:hover label { color: var(--accent); }
+
+  .filter-divider { border-top: 1px solid var(--border); margin: 2px 0; }
+
+  .active-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--sidebar-active-bg);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.77rem;
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-grid-3x3-gap me-2" style="color:var(--accent)"></i>Каталог товаров</h2>
+  <a href="{% url 'catalog:cart' %}" class="btn btn-accent position-relative">
+    <i class="bi bi-cart3 me-1"></i>Корзина
+    {% if cart_count > 0 %}
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ cart_count }}</span>
+    {% endif %}
+  </a>
+</div>
+
+<div class="d-flex gap-4 align-items-start">
+
+  <!-- ===== SIDEBAR FILTERS ===== -->
+  <div class="filter-sidebar">
+    <div class="filter-card">
+
+      <div class="px-3 pt-3 pb-2 d-flex align-items-center justify-content-between">
+        <span class="fw-bold" style="font-size:0.9rem">
+          <i class="bi bi-funnel me-1" style="color:var(--accent)"></i>Фильтры
+        </span>
+        {% if cat_ids or sub_ids %}
+        <a href="{% url 'catalog:index' %}{% if q %}?q={{ q }}&sort={{ sort }}{% endif %}"
+           style="font-size:0.78rem;color:var(--accent);text-decoration:none">
+          Сбросить
+        </a>
+        {% endif %}
+      </div>
+      <div class="filter-divider"></div>
+
+      <form method="get" id="filterForm" class="pb-2">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        <input type="hidden" name="sort" value="{{ sort }}">
+
+        <div class="px-2 pt-2">
+          <div class="px-2 mb-1" style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted)">
+            Марки и модели
+          </div>
+
+          {% for category in categories %}
+          <div>
+            <!-- Category row -->
+            <div class="filter-cat-header" onclick="toggleCat({{ category.id }})">
+              <input type="checkbox" name="category" value="{{ category.id }}"
+                id="cat{{ category.id }}"
+                {% if category.id in cat_ids %}checked{% endif %}
+                onclick="event.stopPropagation()"
+                onchange="document.getElementById('filterForm').submit()"
+                style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin:0">
+              <label class="filter-cat-name" for="cat{{ category.id }}" onclick="event.stopPropagation()">
+                {{ category.name }}
+              </label>
+              {% if category.subcategories.all %}
+              <i class="bi bi-chevron-down filter-chevron" id="chev_{{ category.id }}"></i>
+              {% endif %}
+            </div>
+
+            {% if category.subcategories.all %}
+            <div class="filter-sub-list" id="subs_{{ category.id }}">
+              {% for sub in category.subcategories.all %}
+              <div class="fcheck">
+                <input type="checkbox" name="subcategory" value="{{ sub.id }}" id="sub{{ sub.id }}"
+                  {% if sub.id in sub_ids %}checked{% endif %}
+                  onchange="document.getElementById('filterForm').submit()">
+                <label for="sub{{ sub.id }}">{{ sub.name }}</label>
+              </div>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="flex-grow-1" style="min-width:0">
+
+    <!-- Search & Sort -->
+    <div class="card mb-3">
+      <div class="card-body py-2 px-3">
+        <form method="get" id="searchForm">
+          {% for cid in cat_ids %}<input type="hidden" name="category" value="{{ cid }}">{% endfor %}
+          {% for sid in sub_ids %}<input type="hidden" name="subcategory" value="{{ sid }}">{% endfor %}
+          <div class="d-flex gap-2 align-items-center">
+            <div class="flex-grow-1 position-relative">
+              <i class="bi bi-search position-absolute" style="top:50%;left:11px;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem"></i>
+              <input type="text" name="q" class="form-control ps-4" style="font-size:0.88rem"
+                placeholder="Поиск по названию, описанию..." value="{{ q }}">
+            </div>
+            <select name="sort" class="form-select" style="width:auto;font-size:0.88rem" onchange="this.form.submit()">
+              <option value="name" {% if sort == 'name' %}selected{% endif %}>А — Я</option>
+              <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Дешевле</option>
+              <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Дороже</option>
+            </select>
+            <button type="submit" class="btn btn-accent btn-sm px-3"><i class="bi bi-search"></i></button>
+            {% if q %}<a href="{% url 'catalog:index' %}{% if cat_ids or sub_ids %}?{% for c in cat_ids %}category={{ c }}&{% endfor %}{% for s in sub_ids %}subcategory={{ s }}&{% endfor %}sort={{ sort }}{% endif %}" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i></a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Active filter tags -->
+    {% if cat_ids or sub_ids %}
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      {% for category in categories %}
+        {% if category.id in cat_ids %}
+        <span class="active-tag"><i class="bi bi-tag" style="font-size:0.68rem"></i>{{ category.name }}</span>
+        {% endif %}
+        {% for sub in category.subcategories.all %}
+          {% if sub.id in sub_ids %}
+          <span class="active-tag"><i class="bi bi-diagram-3" style="font-size:0.68rem"></i>{{ sub.name }}</span>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Products count -->
+    <div class="mb-2 small text-muted">Найдено товаров: <strong style="color:var(--text-main)">{{ products|length }}</strong></div>
+
+    <!-- Products Grid -->
+    {% if products %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3">
+      {% for product in products %}
+      <div class="col">
+        <div class="card product-card h-100">
+          {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+          <div class="product-img-placeholder"><i class="bi bi-car-front"></i></div>
+          {% endif %}
+          <div class="card-body p-3 d-flex flex-column">
+            <div class="mb-1">
+              {% if product.subcategory %}
+              <span class="badge" style="background:var(--sidebar-active-bg);color:var(--accent);font-size:0.7rem">{{ product.subcategory.name }}</span>
+              {% elif product.category %}
+              <span class="badge" style="background:var(--sidebar-active-bg);color:var(--accent);font-size:0.7rem">{{ product.category.name }}</span>
+              {% endif %}
+              {% if product.low_stock %}
+              <span class="badge bg-danger ms-1" style="font-size:0.7rem">Мало</span>
+              {% endif %}
+            </div>
+            <h6 class="mb-1 fw-semibold" style="font-size:0.88rem">{{ product.name }}</h6>
+            <p class="text-muted mb-2 flex-grow-1" style="font-size:0.77rem;line-height:1.4">{{ product.description|truncatechars:65 }}</p>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                {% if product.discount > 0 %}
+                <span class="text-muted text-decoration-line-through small">{{ product.price }} ₽</span><br>
+                <span class="fw-bold" style="color:var(--accent)">{{ product.final_price|floatformat:0 }} ₽</span>
+                <span class="badge bg-danger ms-1" style="font-size:0.62rem">-{{ product.discount|floatformat:0 }}%</span>
+                {% else %}
+                <span class="fw-bold" style="color:var(--accent)">{{ product.price }} ₽</span>
+                {% endif %}
+              </div>
+              <span class="text-muted small">{{ product.stock }} шт.</span>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{% url 'catalog:product_detail' product.pk %}" class="btn btn-sm btn-outline-secondary flex-grow-1">
+                <i class="bi bi-eye"></i>
+              </a>
+              {% if product.stock > 0 %}
+              <form method="post" action="{% url 'catalog:cart_add' product.pk %}" class="flex-grow-1">
+                {% csrf_token %}
+                <input type="hidden" name="qty" value="1">
+                <button type="submit" class="btn btn-sm btn-accent w-100">
+                  <i class="bi bi-cart-plus"></i> В корзину
+                </button>
+              </form>
+              {% else %}
+              <button class="btn btn-sm btn-secondary flex-grow-1" disabled>Нет в наличии</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-search" style="font-size:3rem;color:var(--text-muted)"></i>
+      <p class="mt-3 text-muted">Товары не найдены</p>
+      <a href="{% url 'catalog:index' %}" class="btn btn-accent mt-1">Сбросить фильтры</a>
+    </div>
+    {% endif %}
+
+  </div><!-- /main -->
+</div><!-- /flex wrapper -->
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleCat(catId) {
+  const sub = document.getElementById('subs_' + catId);
+  const chev = document.getElementById('chev_' + catId);
+  if (!sub) return;
+  const open = sub.classList.toggle('open');
+  if (chev) chev.classList.toggle('open', open);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Auto-open categories with active subcategory selections
+  document.querySelectorAll('.filter-sub-list').forEach(list => {
+    if (list.querySelector('input:checked')) {
+      list.classList.add('open');
+      const catId = list.id.replace('subs_', '');
+      const chev = document.getElementById('chev_' + catId);
+      if (chev) chev.classList.add('open');
+    }
+  });
+  // Also auto-open if category itself is checked
+  document.querySelectorAll('input[name="category"]:checked').forEach(inp => {
+    const catId = inp.value;
+    const sub = document.getElementById('subs_' + catId);
+    if (sub) {
+      sub.classList.add('open');
+      const chev = document.getElementById('chev_' + catId);
+      if (chev) chev.classList.add('open');
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Поставки — Панель{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-truck me-2" style="color:var(--accent)"></i>Поставки</h2>
+  <a href="{% url 'panel:supply_create' %}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+</div>
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th class="ps-4">Номер</th><th>Поставщик</th><th>Дата</th><th class="text-end">Сумма</th><th class="text-center">Статус</th><th></th></tr></thead>
+      <tbody>
+        {% for s in supplies %}
+        <tr>
+          <td class="ps-4 fw-semibold">{{ s.number }}</td>
+          <td>{{ s.supplier }}</td>
+          <td>{{ s.created_at|date:"d.m.Y" }}</td>
+          <td class="text-end fw-bold" style="color:var(--accent)">{{ s.total|floatformat:0 }} ₽</td>
+          <td class="text-center">{% if s.status == 'received' %}<span class="badge bg-success">Получено</span>{% else %}<span class="badge bg-warning text-dark">Ожидается</span>{% endif %}</td>
+          <td class="text-end pe-3">
+            <a href="{% url 'receipt:supply_detail' s.pk %}" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-eye"></i></a>
+            <a href="{% url 'panel:supply_delete' s.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-4">Нет поставок</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

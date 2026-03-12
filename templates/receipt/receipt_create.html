@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Новый чек{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-receipt me-2" style="color:var(--accent)"></i>Оформление чека</h2>
+  <a href="{% url 'catalog:cart' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Вернуться в корзину
+  </a>
+</div>
+{% if items %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header py-3 d-flex align-items-center gap-2">
+        <i class="bi bi-file-earmark-text" style="color:var(--accent)"></i>
+        <span class="fw-bold">Товарный чек</span>
+        <span class="ms-auto small text-muted">{{ current_user.full_name }}</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table receipt-table mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4" style="width:40px">№</th>
+              <th>Наименование</th>
+              <th class="text-center">Кол-во</th>
+              <th class="text-center">Цена</th>
+              <th class="text-center">Сумма</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td class="ps-4 text-muted">{{ forloop.counter }}</td>
+              <td>
+                <div class="fw-semibold">{{ item.product.name }}</div>
+                {% if item.product.category %}<div class="small text-muted">{{ item.product.category.name }}</div>{% endif %}
+              </td>
+              <td class="text-center">{{ item.qty }}</td>
+              <td class="text-center">{{ item.price|floatformat:2 }} ₽</td>
+              <td class="text-center fw-semibold" style="color:var(--accent)">{{ item.subtotal|floatformat:2 }} ₽</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" class="text-end fw-bold ps-4">ИТОГО:</td>
+              <td class="text-center fw-bold fs-5" style="color:var(--accent)">{{ total|floatformat:2 }} ₽</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header py-3 fw-bold">Подтверждение</div>
+      <div class="card-body p-4">
+        <div class="mb-3">
+          <div class="small text-muted mb-1">Позиций в чеке</div>
+          <div class="fw-bold fs-5">{{ items|length }}</div>
+        </div>
+        <div class="mb-4">
+          <div class="small text-muted mb-1">Сумма</div>
+          <div class="fw-bold fs-4" style="color:var(--accent)">{{ total|floatformat:2 }} ₽</div>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-accent w-100 py-2 mb-2">
+            <i class="bi bi-check2-circle me-2"></i>Создать чек
+          </button>
+        </form>
+        <a href="{% url 'catalog:cart' %}" class="btn btn-outline-secondary w-100">Отмена</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+  <p class="text-muted">Корзина пуста</p>
+  <a href="{% url 'catalog:index' %}" class="btn btn-accent">В каталог</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Чек {{ receipt.number }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-receipt me-2" style="color:var(--accent)"></i>{{ receipt }}</h2>
+  <div class="d-flex gap-2">
+    <a href="{% url 'receipt:receipt_export' receipt.pk %}" class="btn btn-outline-success">
+      <i class="bi bi-file-earmark-excel me-1"></i>Excel
+    </a>
+    {% if receipt.status == 'draft' %}
+    <form method="post" action="{% url 'receipt:receipt_confirm' receipt.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-accent">
+        <i class="bi bi-check2-all me-1"></i>Провести
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body p-4">
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <div class="small text-muted">Номер</div>
+        <div class="fw-bold">{{ receipt.number }}</div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small text-muted">Дата</div>
+        <div class="fw-bold">{{ receipt.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small text-muted">Статус</div>
+        {% if receipt.status == 'confirmed' %}
+        <span class="badge bg-success">Проведён</span>
+        {% else %}
+        <span class="badge bg-warning text-dark">Черновик</span>
+        {% endif %}
+      </div>
+      <div class="col-sm-4">
+        <div class="small text-muted">Продавец</div>
+        <div class="fw-bold">{{ receipt.seller.full_name|default:"—" }}</div>
+      </div>
+    </div>
+    <table class="table receipt-table">
+      <thead>
+        <tr>
+          <th class="ps-3" style="width:40px">№</th>
+          <th>Наименование</th>
+          <th class="text-center">Кол-во</th>
+          <th class="text-center">Цена</th>
+          <th class="text-center">Сумма</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in receipt.items.all %}
+        <tr>
+          <td class="ps-3 text-muted">{{ forloop.counter }}</td>
+          <td>{{ item.product_name }}</td>
+          <td class="text-center">{{ item.quantity }}</td>
+          <td class="text-center">{{ item.price|floatformat:2 }} ₽</td>
+          <td class="text-center fw-semibold" style="color:var(--accent)">{{ item.subtotal|floatformat:2 }} ₽</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="text-end fw-bold">ИТОГО:</td>
+          <td class="text-center fw-bold fs-5" style="color:var(--accent)">{{ receipt.total|floatformat:2 }} ₽</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+<a href="{% url 'receipt:receipt_list' %}" class="text-decoration-none" style="color:var(--accent)">
+  <i class="bi bi-arrow-left me-1"></i>Все чеки
+</a>
+{% endblock %}
